@@ -1,5 +1,6 @@
 #include <LinkedList.h>
 
+
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
@@ -12,17 +13,18 @@
 #define SIZEOF_ARRAY(_array) (sizeof(_array) / sizeof(_array[0]))
 #define FLOAT_MAX_VALUE 15000
 
+#include "templates.h"
 
 struct Result{
   int id;
   float score;
 };
-
+/*
 struct Template {
   float templatePath[NB_POINTS];
   int id;
 };
-
+*/
 //MPU variables
 
 MPU6050 mpu;
@@ -47,7 +49,8 @@ int limiter = 0 ;
 
 LinkedList<float> *measureList = new LinkedList<float>();
 //BMPoint measure[NB_POINTS];
-Template templates[] = {
+/*
+const Template templates[] = {
   {{77.16,
 77.44,
 78.24,
@@ -149,7 +152,7 @@ Template templates[] = {
 74.75,
 75.23},2}
   };
-
+*/
 int nbTemplates = SIZEOF_ARRAY(templates);
 
 //Interrupt detection routine
@@ -171,7 +174,7 @@ float distance(float a, float b) {
 }
 
 
-float pathDistance(float templ[], LinkedList<float> *path2) {
+float pathDistance(const float templ[], LinkedList<float> *path2) {
   if(path2->size()< NB_POINTS) {
     return -1;
   }
