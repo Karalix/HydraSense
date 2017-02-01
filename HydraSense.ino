@@ -45,114 +45,12 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
 
 int limiter = 0 ;
-
+bool isDrinking = false;
+unsigned long timeStartDrinking = 0;
 
 LinkedList<float> *measureList = new LinkedList<float>();
 //BMPoint measure[NB_POINTS];
-/*
-const Template templates[] = {
-  {{77.16,
-77.44,
-78.24,
-78.99,
-79.46,
-79.36,
-78.36,
-76.46,
-74.10,
-71.73,
-69.56,
-67.62,
-65.38,
-62.58,
-59.44,
-56.30,
-53.29,
-50.38,
-47.46,
-44.38,
-41.25,
-38.27,
-35.54,
-33.01,
-30.56,
-28.06,
-25.51,
-22.92,
-20.39,
-18.12,
-16.24,
-14.55,
-12.76,
-10.88,
-9.02,
-7.38,
-6.05,
-4.89,
-3.72,
-2.58,
-1.48,
-0.28,
--1.01,
--2.25,
--3.35,
--4.30,
--5.12,
--5.86,
--6.35,
--6.61},1},
-{{-13.60,
--13.31,
--12.85,
--12.27,
--11.61,
--10.89,
--10.12,
--9.23,
--8.19,
--6.93,
--5.42,
--3.69,
--1.88,
--0.14,
-1.60,
-3.43,
-5.39,
-7.46,
-9.53,
-11.64,
-13.91,
-16.41,
-19.14,
-22.10,
-25.23,
-28.56,
-32.04,
-35.40,
-38.34,
-41.16,
-44.07,
-46.96,
-49.66,
-52.16,
-54.74,
-57.52,
-60.10,
-62.52,
-64.61,
-66.36,
-67.87,
-69.20,
-70.33,
-71.30,
-72.12,
-72.83,
-73.53,
-74.20,
-74.75,
-75.23},2}
-  };
-*/
+
 int nbTemplates = SIZEOF_ARRAY(templates);
 
 //Interrupt detection routine
@@ -218,7 +116,7 @@ Result recognize() {
 
 void setup() {
   
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(13, OUTPUT);
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
@@ -240,11 +138,12 @@ void setup() {
     Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 
     // wait for ready
+    /*
     Serial.println(F("\nSend any character to begin DMP programming and demo: "));
     while (Serial.available() && Serial.read()); // empty buffer
     while (!Serial.available());                 // wait for data
     while (Serial.available() && Serial.read()); // empty buffer again
-
+*/
     // load and configure the DMP
     Serial.println(F("Initializing DMP..."));
     devStatus = mpu.dmpInitialize();
@@ -347,13 +246,32 @@ void loop() {
           //Serial.println(measureList->size());
           
           Result res = recognize();
-          if(res.score >= 0.91){
+          if(res.score >= 0.9){
             switch(res.id){
               case 1 :
-              Serial.println("Commence a boire !");
-              break;
+                if(!isDrinking){
+                  isDrinking = true;
+                  timeStartDrinking = millis();
+                  Serial.println("Commence a boire !");
+                  digitalWrite(13, HIGH);
+                }
+                break;
               case 2 :
-              Serial.println("Arrete de boire !");
+                if(isDrinking){
+                  isDrinking = false;
+                  unsigned long timeSpent = millis() - timeStartDrinking;
+                  Serial.print("Drank for ");
+                  Serial.print(timeSpent/1000.);
+                  Serial.println(" secondes");
+                  Serial.print("Approximate quantity of liquid drank : ");
+                  Serial.print(timeSpent/500.);
+                  Serial.println(" cL");
+                  digitalWrite(13, LOW);
+                }
+                break;
+              case 3 :
+                Serial.println("Bottle felt");
+                break;
             }
             /*
             Serial.print(res.id);
